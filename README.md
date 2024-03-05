@@ -61,6 +61,20 @@ import MyMainReactComponent from './path-to/MyMainReactComponent';
 // Use the component with optional 'name' prop
 <MyMainReactComponent name="User" />
 
+## DataInventoryComponent
+
+### Overview
+`DataInventoryComponent` is a React component for managing data inventory. Similar to KOsComponent, it includes dropdowns, a table displaying data, and buttons for actions. The classification options also have conditional styling based on their values.
+
+#### Usage
+
+jsx
+Copy code
+import DataInventoryComponent from './path-to/DataInventoryComponent';
+
+// Use the component with optional 'name' prop
+<DataInventoryComponent name="User" />
+
 ## KOsComponent
 
 ### Overview
@@ -73,18 +87,7 @@ import MyMainReactComponent from './path-to/MyMainReactComponent';
 import KOsComponent from './path-to/KOsComponent';
 
 // Use the component with optional 'name' prop
-<KOsComponent name="User" />```
+<KOsComponent name="User" />
 
-## DataInventoryComponent
 
-### Overview
-`DataInventoryComponent` is a React component for managing data inventory. Similar to KOsComponent, it includes dropdowns, a table displaying data, and buttons for actions. The classification options also have conditional styling based on their values.
 
-#### Usage
-
-```jsx
-Copy code
-import DataInventoryComponent from './path-to/DataInventoryComponent';
-
-// Use the component with optional 'name' prop
-<DataInventoryComponent name="User" />
