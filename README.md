@@ -55,11 +55,11 @@ This repository contains three React components: `MyMainReactComponent`, `KOsCom
 
 #### Usage
 
-`jsx
+``jsx
 import MyMainReactComponent from './path-to/MyMainReactComponent';
 
 // Use the component with optional 'name' prop
-<MyMainReactComponent name="User" />`
+<MyMainReactComponent name="User" />``
 
 ### DataInventoryComponent
 
@@ -68,12 +68,12 @@ import MyMainReactComponent from './path-to/MyMainReactComponent';
 
 #### Usage
 
-`jsx
+``jsx
 Copy code
-import DataInventoryComponent from './path-to/DataInventoryComponent';`
+import DataInventoryComponent from './path-to/DataInventoryComponent';
 
 // Use the component with optional 'name' prop
-<DataInventoryComponent name="User" />
+<DataInventoryComponent name="User" />``
 
 ## KOsComponent
 
