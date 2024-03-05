@@ -60,7 +60,7 @@ const MyMainReactComponent = ({ name = 'User' }) => {
             </MenuDiv>
 
             {/* Conditional rendering based on the current view*/}
-            {currentView === 'overview' && <OverviewComponent />}
+            {currentView === 'overview' && <OverviewComponent searchValue={value} />}
             {currentView === 'kos' && <KOsComponent />}
             {currentView === 'dataInventory' && <DataInventoryComponent />}
         </div>
