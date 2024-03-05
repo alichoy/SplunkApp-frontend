@@ -8,7 +8,6 @@ directory in the `/packages` directory. Each package is self contained, and defi
 We use [Yarn Workspaces](https://yarnpkg.com/lang/en/docs/workspaces/) and [Lerna](https://github.com/lerna/lerna) for
 managing and publishing multiple packages in the same repository.
 
-
 ## Getting Started
 
 1. Clone the repo.
@@ -41,4 +40,51 @@ For more granular control of development scripts, consider using [Lerna](https:/
 
 MyReactRepo uses [prettier](https://github.com/prettier/prettier) to ensure consistent code formatting. It is recommended
  to [add a prettier plugin to your editor/ide](https://github.com/prettier/prettier#editor-integration).
+
 # SplunkApp
+
+# React Components
+
+This repository contains three React components: `MyMainReactComponent`, `KOsComponent`, and `DataInventoryComponent`.
+
+## MyMainReactComponent
+
+### Overview
+
+`MyMainReactComponent` is the main component of the application you will see when opening the App. It includes a menu with buttons for Overview, KOs, and Data Inventory. Additionally, it features a search bar for filtering options. The component shows a summary of the amount of Apps, Dashboards, Alerts and others in the Splunk hosts.
+
+#### Usage
+
+```jsx
+import MyMainReactComponent from './path-to/MyMainReactComponent';
+
+// Use the component with optional 'name' prop
+<MyMainReactComponent name="User" />
+
+## KOsComponent
+
+### Overview
+
+`KOsComponent` is a React component for managing KOs (Key Objectives). It includes dropdowns, a table displaying data, and buttons for actions. The classification options have conditional styling based on their values.
+
+#### Usage
+
+```jsx
+import KOsComponent from './path-to/KOsComponent';
+
+// Use the component with optional 'name' prop
+<KOsComponent name="User" />```
+
+## DataInventoryComponent
+
+### Overview
+`DataInventoryComponent` is a React component for managing data inventory. Similar to KOsComponent, it includes dropdowns, a table displaying data, and buttons for actions. The classification options also have conditional styling based on their values.
+
+#### Usage
+
+```jsx
+Copy code
+import DataInventoryComponent from './path-to/DataInventoryComponent';
+
+// Use the component with optional 'name' prop
+<DataInventoryComponent name="User" />
