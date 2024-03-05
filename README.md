@@ -55,22 +55,22 @@ This repository contains three React components: `MyMainReactComponent`, `KOsCom
 
 #### Usage
 
-```jsx
+`jsx
 import MyMainReactComponent from './path-to/MyMainReactComponent';
 
 // Use the component with optional 'name' prop
-<MyMainReactComponent name="User" />
+<MyMainReactComponent name="User" />`
 
-## DataInventoryComponent
+### DataInventoryComponent
 
 ### Overview
 `DataInventoryComponent` is a React component for managing data inventory. Similar to KOsComponent, it includes dropdowns, a table displaying data, and buttons for actions. The classification options also have conditional styling based on their values.
 
 #### Usage
 
-jsx
+`jsx
 Copy code
-import DataInventoryComponent from './path-to/DataInventoryComponent';
+import DataInventoryComponent from './path-to/DataInventoryComponent';`
 
 // Use the component with optional 'name' prop
 <DataInventoryComponent name="User" />
