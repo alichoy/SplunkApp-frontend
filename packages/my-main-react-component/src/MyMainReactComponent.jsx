@@ -1,3 +1,4 @@
+// MyMainReactComponent.jsx
 import React, { useState, useEffect } from 'react';
 import OverviewComponent from '../../overview-component/src/OverviewComponent'
 import KOsComponent from '../../k-os-component/src/KOsComponent';
@@ -5,7 +6,7 @@ import DataInventoryComponent from '../../data-inventory-component/src/DataInven
 import PropTypes from 'prop-types';
 import Button from '@splunk/react-ui/Button';
 import Search from '@splunk/react-ui/Search';
-import {MenuDiv, SearchContainer } from './MyMainReactComponentStyles';
+import { MenuDiv, SearchContainer } from './MyMainReactComponentStyles';
 
 const propTypes = {
     name: PropTypes.string,
@@ -48,7 +49,7 @@ const MyMainReactComponent = ({ name = 'User' }) => {
     return (
         <div>
             <MenuDiv>
-                <Button label="Overview" appearance="primary"  onClick={goToOverview}/>
+                <Button label="Overview" appearance="primary" onClick={goToOverview} />
                 <Button label="KOs" appearance="primary" onClick={goToKOs} />
                 <Button label="Data Inventory" appearance="primary" onClick={goToDataInventory} />
 
@@ -61,8 +62,8 @@ const MyMainReactComponent = ({ name = 'User' }) => {
 
             {/* Conditional rendering based on the current view*/}
             {currentView === 'overview' && <OverviewComponent searchValue={value} />}
-            {currentView === 'kos' && <KOsComponent />}
-            {currentView === 'dataInventory' && <DataInventoryComponent />}
+            {currentView === 'kos' && <KOsComponent searchValue={value} />}
+            {currentView === 'dataInventory' && <DataInventoryComponent searchValue={value} />}
         </div>
     );
 };

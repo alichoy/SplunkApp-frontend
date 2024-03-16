@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import Button from '@splunk/react-ui/Button';
 import { StyledContainer, StyledGreeting, GridLayout } from './OverviewComponentStyles';
 
 const propTypes = {

@@ -12,7 +12,7 @@ const propTypes = {
     name: PropTypes.string,
 };
 
-const DataInventoryComponent = ({ name = 'User' }) => {
+const DataInventoryComponent = ({ name = 'User', searchValue }) => {
      // Initialize state variables using useState
      const [selectedOption1, setSelectedOption1] = useState('All'); // Default to the first item
      const [selectedOption2, setSelectedOption2] = useState('All Hosts'); // Default to the first item
@@ -84,14 +84,19 @@ const DataInventoryComponent = ({ name = 'User' }) => {
    
      // Sample data for the Table
      const data = [
-       { id: 1, name: 'All users', description: ' users lookup', owner: 'admin', metaLabel: [], classification: '' },
-       { id: 2, name: 'Main Report', description: 'January sales report', owner: 'user1', metaLabel: [], classification: '' },
-       { id: 3, name: '_splunk', description: '_splunkLogs_', owner: 'user2', metaLabel: [], classification: '' },
-       { id: 4, name: 'HR Dash', description: 'HR dashboard', owner: 'HR user', metaLabel: [], classification: '' },
-       { id: 5, name: 'Sales', description: 'alert', owner: 'admin', metaLabel: [], classification: '' },
-       { id: 6, name: '_internal', description: '_splunkLogs_', owner: 'user1', metaLabel: [], classification: '' },
-     ];
-   
+        { id: 1, name: 'All users', description: 'users lookup', owner: 'admin', metaLabel: [], classification: '', category: 'Reports/Saved Searches' },
+        { id: 2, name: 'Main Report', description: 'January sales report', owner: 'user1', metaLabel: [], classification: '', category: 'Reports/Saved Searches' },
+        { id: 3, name: '_splunk', description: '_splunkLogs_', owner: 'user2', metaLabel: [], classification: '', category: 'Fields' },
+        { id: 4, name: 'HR Dash', description: 'HR dashboard', owner: 'HR user', metaLabel: [], classification: '', category: 'Dashboards' },
+        { id: 5, name: 'Sales', description: 'alert', owner: 'admin', metaLabel: [], classification: '', category: 'Alerts' },
+        { id: 6, name: '_internal', description: '_splunkLogs_', owner: 'user1', metaLabel: [], classification: '', category: 'Fields' },
+    ];
+
+    const filteredData = data.filter(item =>
+        (selectedOption1 === 'All' || item.category === selectedOption1) &&
+        (!searchValue || item.category.toLowerCase().includes(searchValue.toLowerCase()))
+    );
+    
      // Return the JSX for rendering the component
      return (
        <StyledContainer>
