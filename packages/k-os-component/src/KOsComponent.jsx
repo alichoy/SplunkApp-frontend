@@ -59,13 +59,50 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
       });
   }, []); // Empty dependency array to run only once on component mount
 
-  // Handle change in selected labels using Multiselect
+  // Handle change in selected labels using Multiselect 
   const handleLabelsChange = (id, values) => {
-    setSelectedLabels({
-      ...selectedLabels,
-      [id]: values
+  setSelectedLabels({
+    ...selectedLabels,
+    [id]: values
+  });
+
+  // Prepare the data to be sent in the PUT request
+  const updatedData = {
+    ...data.find(item => item.id === id),
+    meta_label_id: values.map(value => value.id) // Assuming the selected values have an 'id' property
+  };
+
+  // Determine the endpoint based on the category of the item
+  let endpoint;
+  switch (updatedData.category_id) {
+    case 1:
+      endpoint = `https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/apps/${id}`;
+      break;
+    case 2:
+      endpoint = `https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/reports/${id}`;
+      break;
+    case 3:
+      endpoint = `https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/dashboard/${id}`;
+      break;
+    case 4:
+      endpoint = `https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/alert/${id}`;
+      break;
+    default:
+      console.error('Invalid category ID:', updatedData.category_id);
+      return;
+  }
+
+  // Send the PUT request to update the record with the meta label
+  axios.put(endpoint, updatedData)
+    .then(response => {
+      console.log('Record updated successfully:', response.data);
+      // You can update the state or perform any other necessary actions upon successful update
+    })
+    .catch(error => {
+      console.error('Error updating record:', error);
     });
   };
+
   //--------------- META LABELS ---------------
 
   //--------------- CLASSIFICATIONS ---------------
