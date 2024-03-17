@@ -16,134 +16,112 @@ const propTypes = {
 
 const KOsComponent = ({ name = 'User', searchValue }) => {
 
+  const [filteredData, setFilteredData] = useState([]); // Add this line
   const [data, setData] = useState([]); // State to hold fetched data
   const [currentPage, setCurrentPage] = useState(1); // Current page number
   const [recordsPerPage] = useState(20); // Number of records per page
-  const [categorySelected, setcategorySelected] = useState(null); // Change initial state to null
+  const [categories, setCategories] = useState([]);
+  const [categorySelected, setCategorySelected] = useState(null); // Change initial state to null
   const [selectedOption2, setSelectedOption2] = useState('All Hosts'); // Default to the first item
   const [selectedClassifications, setSelectedClassifications] = useState({});
   const [classificationOptions, setClassificationOptions] = useState([]);
   const [metaLabels, setMetaLabels] = useState([]);
   const [selectedLabels, setSelectedLabels] = useState({});
   const [hosts, setHosts] = useState([]);
-  const [categories, setCategories] = useState([]);
-
+  
   // Fetch data from the endpoints
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [reportsData, appsData, dashboardsData, alertData] = await Promise.all([
-          fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/'),
-          fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/apps'),
-          fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/dashboard'),
-          fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/alert')
-        ]);
-        // Merge data from all endpoints into a single array
-        setData([...reportsData, ...appsData, ...dashboardsData, ...alertData]);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
     fetchData();
   }, []);
 
-  //--------------- META LABELS ---------------
+  const fetchData = async () => {
+    try {
+      const [
+        reportsData,appsData,dashboardsData,alertData,metaLabelsData,classificationsData,hostsData,categoriesData
+      ] = await Promise.all([
+        fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/'),
+        fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/apps'),
+        fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/dashboard'),
+        fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/alert'),
+        fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/meta-labels'),
+        fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/classifications'),
+        fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/host'),
+        fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/categories')
+      ]);
+      // Merge data from all endpoints into a single array
+      setData([...reportsData, ...appsData, ...dashboardsData, ...alertData]);
+      setMetaLabels(metaLabelsData);
+      setClassificationOptions(classificationsData);
+      setHosts(['All Hosts', ...hostsData.map(host => host.title)]);
+      setCategories(categoriesData);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
+  // Render data based on selected category and search input
   useEffect(() => {
-    axios.get('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/meta-labels')
-      .then(response => {
-        // Assuming the response data is an array of labels
-        setMetaLabels(response.data);
-      })
-      .catch(error => {
-        console.error('Error fetching meta labels:', error);
-      });
-  }, []); // Empty dependency array to run only once on component mount
+    let filteredData = data;
+
+    // Apply category filter if a category is selected
+    if (categorySelected !== null) {
+      filteredData = filteredData.filter(dataItem => dataItem.category_id === categorySelected);
+    }
+
+    // Apply search filter if there's a search input
+    if (searchValue.trim() !== '') {
+      filteredData = filteredData.filter(dataItem =>
+        dataItem.title.toLowerCase().includes(searchValue.toLowerCase())
+      );
+    }
+
+    // Update filtered data state
+    setFilteredData(filteredData);
+  }, [categorySelected, searchValue, data]);
 
   // Handle change in selected labels using Multiselect 
   const handleLabelsChange = (id, values) => {
-  setSelectedLabels({
-    ...selectedLabels,
-    [id]: values
-  });
-
-  // Prepare the data to be sent in the PUT request
-  const updatedData = {
-    ...data.find(item => item.id === id),
-    meta_label_id: values.map(value => value.id) // Assuming the selected values have an 'id' property
-  };
-
-  // Determine the endpoint based on the category of the item
-  let endpoint;
-  switch (updatedData.category_id) {
-    case 1:
-      endpoint = `https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/apps/${id}`;
-      break;
-    case 2:
-      endpoint = `https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/reports/${id}`;
-      break;
-    case 3:
-      endpoint = `https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/dashboard/${id}`;
-      break;
-    case 4:
-      endpoint = `https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/alert/${id}`;
-      break;
-    default:
-      console.error('Invalid category ID:', updatedData.category_id);
-      return;
-  }
-
-  // Send the PUT request to update the record with the meta label
-  axios.put(endpoint, updatedData)
-    .then(response => {
-      console.log('Record updated successfully:', response.data);
-      // You can update the state or perform any other necessary actions upon successful update
-    })
-    .catch(error => {
-      console.error('Error updating record:', error);
+    setSelectedLabels({
+      ...selectedLabels,
+      [id]: values
     });
+
+    // Prepare the data to be sent in the PUT request
+    const updatedData = {
+      ...data.find(item => item.id === id),
+      meta_label_id: values.map(value => value.id) // Assuming the selected values have an 'id' property
+    };
+
+    // Determine the endpoint based on the category of the item
+    let endpoint;
+    switch (updatedData.category_id) {
+      case 1:
+        endpoint = `https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/apps/${id}`;
+        break;
+      case 2:
+        endpoint = `https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/reports/${id}`;
+        break;
+      case 3:
+        endpoint = `https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/dashboard/${id}`;
+        break;
+      case 4:
+        endpoint = `https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/alert/${id}`;
+        break;
+      default:
+        console.error('Invalid category ID:', updatedData.category_id);
+        return;
+    }
+
+    // Send the PUT request to update the record with the meta label
+    axios.put(endpoint, updatedData)
+      .then(response => {
+        console.log('Record updated successfully:', response.data);
+        // You can update the state or perform any other necessary actions upon successful update
+      })
+      .catch(error => {
+        console.error('Error updating record:', error);
+      });
   };
-
-  //--------------- META LABELS ---------------
-
-  //--------------- CLASSIFICATIONS ---------------
-  useEffect(() => {
-    axios.get('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/classifications')
-        .then(response => {
-            setClassificationOptions(response.data);
-        })
-        .catch(error => {
-            console.error('Error fetching classifications:', error);
-        });
-  }, []);
-  //--------------- CLASSIFICATIONS ---------------
-
-  //--------------- HOSTS ---------------
-  useEffect(() => {
-    axios.get('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/host')
-      .then(response => {
-        // Extract the titles from the response data
-        const titles = response.data.map(host => host.title);
-        // Update the hosts state with the titles
-        setHosts(['All Hosts', ...titles]);
-      })
-      .catch(error => {
-        console.error('Error fetching hosts:', error);
-      });
-  }, []); // Empty dependency array to run only once on component mount
-  //--------------- HOSTS ---------------
-
-  //--------------- CATEGORIES ---------------
-  useEffect(() => {
-    axios.get('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/categories')
-      .then(response => {
-        // Update the categories state with the category data (id and category_name)
-        setCategories(response.data);
-      })
-      .catch(error => {
-        console.error('Error fetching categories:', error);
-      });
-  }, []);
-  //--------------- CATEGORIES ---------------
 
   // Define toggle functions for Dropdowns and Buttons
   const toggleClassification = (id) => (
@@ -172,7 +150,7 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
   // Define functions to handle Dropdown selections
   const handleCategoryDropdown = (categoryId) => {
     const selectedCategory = categories.find(item => item.id === categoryId);
-    setcategorySelected(categoryId);
+    setCategorySelected(categoryId);
   };
 
   useEffect(() => {
@@ -216,10 +194,14 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
   };
 
   // Render data based on selected category
-  let filteredData = data;
-  if (categorySelected !== null) {
-    filteredData = data.filter(dataItem => dataItem.category_id === categorySelected);
-  }
+  useEffect(() => {
+    if (categorySelected !== null) {
+      setFilteredData(data.filter(dataItem => dataItem.category_id === categorySelected));
+    } else {
+      // If no category is selected, display all data
+      setFilteredData(data);
+    }
+  }, [categorySelected, data]);
 
   // Get the current records based on pagination and filtered data
   const currentRecords = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);

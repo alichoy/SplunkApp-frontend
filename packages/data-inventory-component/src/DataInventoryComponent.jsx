@@ -26,31 +26,33 @@ const DataInventoryComponent = ({ name = 'User', searchValue }) => {
     const [selectedLabels, setSelectedLabels] = useState({});
     const [hosts, setHosts] = useState([]);
     const [categories, setCategories] = useState([]);
+    const [filteredData, setFilteredData] = useState([]); // Add this line
 
     useEffect(() => {
         fetchData();
     }, []);
 
     const fetchData = async () => {
-        try {
-            const [lookupsData, indexesData, sourcesData, sourceTypesData, metaLabelsData, classificationsData, hostsData, categoriesData] = await Promise.all([
-                fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/lookup'),
-                fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/index'),
-                fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/source'),
-                fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/sourcetype'),
-                fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/meta-labels'),
-                fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/classifications'),
-                fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/host'),
-                fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/categories')
-            ]);
-            setData([...lookupsData, ...indexesData, ...hostsData, ...sourcesData, ...sourceTypesData]);
-            setMetaLabels(metaLabelsData);
-            setClassificationOptions(classificationsData);
-            setHosts(['All Hosts', ...hostsData.map(host => host.title)]);
-            setCategories(categoriesData);
-        } catch (error) {
-            console.error('Error fetching data:', error);
-        }
+      try {
+        const [lookupsData, indexesData, sourcesData, sourceTypesData, metaLabelsData, classificationsData, hostsData, categoriesData] = await Promise.all([
+          fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/lookup'),
+            fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/index'),
+            fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/source'),
+            fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/sourcetype'),
+            fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/meta-labels'),
+            fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/classifications'),
+            fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/host'),
+            fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/categories')
+        ]);
+          setData([...lookupsData, ...indexesData, ...hostsData, ...sourcesData, ...sourceTypesData]);
+          setMetaLabels(metaLabelsData);
+          setClassificationOptions(classificationsData);
+          setHosts(['All Hosts', ...hostsData.map(host => host.title)]);
+          setCategories(categoriesData);
+          setFilteredData([...lookupsData, ...indexesData, ...hostsData, ...sourcesData, ...sourceTypesData]); // Add this line
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
     };
 
     const fetchDataFromEndpoint = async (endpoint) => {
@@ -149,10 +151,25 @@ const DataInventoryComponent = ({ name = 'User', searchValue }) => {
     const indexOfLastRecord = currentPage * recordsPerPage;
     const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
 
-    let filteredData = data;
-    if (categorySelected !== null) {
-        filteredData = data.filter(dataItem => dataItem.category_id === categorySelected);
-    }
+    // Update filtered data based on search input
+    useEffect(() => {
+        let updatedFilteredData = [...data];
+
+        // Apply category filter if a category is selected
+        if (categorySelected !== null) {
+            updatedFilteredData = updatedFilteredData.filter(dataItem => dataItem.category_id === categorySelected);
+        }
+
+        // Apply search filter if there's a search input
+        if (searchValue.trim() !== '') {
+            updatedFilteredData = updatedFilteredData.filter(dataItem =>
+                dataItem.title.toLowerCase().includes(searchValue.toLowerCase())
+            );
+        }
+
+        // Update filtered data state
+        setFilteredData(updatedFilteredData);
+    }, [searchValue, categorySelected, data]);
 
     const currentRecords = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
 

@@ -15,24 +15,31 @@ const propTypes = {
 const MyMainReactComponent = ({ name = 'User' }) => {
     const [value, setValue] = useState(''); // State for the search box
     const [currentView, setCurrentView] = useState('overview'); // Track the current view
+    const [categories, setCategories] = useState([]); // State to hold categories data
+
+    // Fetch categories data from the endpoint
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await fetch('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/categories');
+                const data = await response.json();
+                setCategories(data);
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+            }
+        };
+        fetchCategories();
+    }, []);
 
     // Handles search box
     const handleSearchChange = (e, { value: searchValue }) => {
         setValue(searchValue);
     };
 
-    let options;
-    if (!value?.length) {
-        options = [
-            <Search.Option key="apps" value="Apps" />,
-            <Search.Option key="dashboards" value="Dashboards" />,
-            <Search.Option key="search-reports" value="Search Reports" />,
-            <Search.Option key="alerts" value="Alerts" />,
-            <Search.Option key="indexes" value="Indexes" />,
-            <Search.Option key="lookups" value="Lookups" />,
-            <Search.Option key="source-sourcetypes-hosts" value="Source/Sourcetypes/Hosts" />,
-        ];
-    }
+    // Generate options for the search box based on categories data
+    const options = categories.map(category => (
+        <Search.Option key={category.id} value={category.category_name}/>
+    ));
 
     const goToOverview = () => {
         setCurrentView('overview');
