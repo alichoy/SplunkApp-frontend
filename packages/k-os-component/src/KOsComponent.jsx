@@ -9,6 +9,7 @@ import { StyledContainer, DropdownMenus } from './KOsComponentStyles';
 import Trash from '@splunk/react-icons/enterprise/Trash';
 import Paginator from '@splunk/react-ui/Paginator';
 import axios from 'axios';
+import { fetchDataFromEndpoint } from '../../api'; // Import fetchDataFromEndpoint function from api.js
 
 const propTypes = {
   name: PropTypes.string,
@@ -16,19 +17,19 @@ const propTypes = {
 
 const KOsComponent = ({ name = 'User', searchValue }) => {
 
-  const [filteredData, setFilteredData] = useState([]); // Add this line
-  const [data, setData] = useState([]); // State to hold fetched data
+  const [filteredData, setFilteredData] = useState([]);
+  const [data, setData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1); // Current page number
   const [recordsPerPage] = useState(20); // Number of records per page
   const [categories, setCategories] = useState([]);
-  const [categorySelected, setCategorySelected] = useState(null); // Change initial state to null
-  const [selectedOption2, setSelectedOption2] = useState('All Hosts'); // Default to the first item
+  const [categorySelected, setCategorySelected] = useState(null);
+  const [selectedHost, setselectedHost] = useState('All Hosts');
   const [selectedClassifications, setSelectedClassifications] = useState({});
   const [classificationOptions, setClassificationOptions] = useState([]);
   const [metaLabels, setMetaLabels] = useState([]);
   const [selectedLabels, setSelectedLabels] = useState({});
   const [hosts, setHosts] = useState([]);
-  
+
   // Fetch data from the endpoints
   useEffect(() => {
     fetchData();
@@ -37,17 +38,18 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
   const fetchData = async () => {
     try {
       const [
-        reportsData,appsData,dashboardsData,alertData,metaLabelsData,classificationsData,hostsData,categoriesData
+        reportsData, appsData, dashboardsData, alertData, metaLabelsData, classificationsData, hostsData, categoriesData
       ] = await Promise.all([
-        fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/'),
-        fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/apps'),
-        fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/dashboard'),
-        fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/alert'),
-        fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/meta-labels'),
-        fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/classifications'),
-        fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/host'),
-        fetchDataFromEndpoint('https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/categories')
+        fetchDataFromEndpoint(''),
+        fetchDataFromEndpoint('apps'),
+        fetchDataFromEndpoint('dashboard'),
+        fetchDataFromEndpoint('alert'),
+        fetchDataFromEndpoint('meta-labels'),
+        fetchDataFromEndpoint('classifications'),
+        fetchDataFromEndpoint('host'),
+        fetchDataFromEndpoint('categories')
       ]);
+
       // Merge data from all endpoints into a single array
       setData([...reportsData, ...appsData, ...dashboardsData, ...alertData]);
       setMetaLabels(metaLabelsData);
@@ -79,6 +81,7 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
     setFilteredData(filteredData);
   }, [categorySelected, searchValue, data]);
 
+  //__________________ PUT ___________________________
   // Handle change in selected labels using Multiselect 
   const handleLabelsChange = (id, values) => {
     setSelectedLabels({
@@ -122,15 +125,29 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
         console.error('Error updating record:', error);
       });
   };
+  //__________________ PUT ___________________________
 
-  // Define toggle functions for Dropdowns and Buttons
-  const toggleClassification = (id) => (
-    <Button isMenu style={{ width: "8rem" }}>
-      {selectedClassifications[id] !== undefined
+  //toggle functions for Dropdowns and Buttons
+  const toggleClassification = (id) => {
+    const classificationId = data.find((dataItem) => dataItem.id === id)?.classification_id;
+    if (classificationId !== null && classificationOptions.length > 0) {
+      const classification = classificationOptions.find((option) => option.id === classificationId);
+      return <Button 
+        style={{ 
+        width: "8rem",
+        backgroundColor: {
+        'Top Secret': 'orange',
+        'Top Secret/SCI': 'yellow',
+        'Secret': 'red',
+        'Confidential': 'blue',
+        'Unclassified': 'green',
+      }[classification.classification_name] }}>{classification.classification_name}</Button>;
+    } else {
+      return <Button isMenu style={{ width: "8rem" }}>{selectedClassifications[id] !== undefined
         ? selectedClassifications[id]
-        : data.find((dataItem) => dataItem.id === id)?.classification || 'Select'}
-    </Button>
-  );
+        : data.find((dataItem) => dataItem.id === id)?.classification || 'Select'}</Button>;
+    }
+  };
 
   // Handle change in selected classification using Dropdown
   const handleClassificationChange = (id, option) => {
@@ -138,13 +155,6 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
       ...prevSelectedClassifications,
       [id]: option.label,
     }));
-  };
-
-  // Function to fetch data from an endpoint
-  const fetchDataFromEndpoint = async (endpoint) => {
-    const response = await fetch(endpoint);
-    const data = await response.json();
-    return data;
   };
 
   // Define functions to handle Dropdown selections
@@ -157,8 +167,8 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
     console.log('Selected category in use effect:', categorySelected?.category_name);
   }, [categorySelected]);
 
-  const handleSelect2 = (option) => {
-    setSelectedOption2(option);
+  const handleHostSelect = (option) => {
+    setselectedHost(option);
   };
 
   // Effect hook to set initial classifications based on data
@@ -178,9 +188,9 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
     </Button>
   );
 
-  const toggle2 = (
+  const hostToggle = (
     <Button isMenu style={{ width: "12rem" }}>
-      {selectedOption2}
+      {selectedHost}
     </Button>
   );
 
@@ -206,7 +216,6 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
   // Get the current records based on pagination and filtered data
   const currentRecords = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
 
-  // Return the JSX for rendering the component
   return (
     <StyledContainer>
       <DropdownMenus>
@@ -223,15 +232,15 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
                 <Menu.Item key={item.id} onClick={() => handleCategoryDropdown(item.id)}>
                   {item.category_name}
                 </Menu.Item>
-            ))}
+              ))}
           </Menu>
         </Dropdown>
 
         {/* Dropdown for hosts */}
-        <Dropdown toggle={toggle2}>
+        <Dropdown toggle={hostToggle}>
           <Menu style={{ width: 120 }}>
             {hosts.map((item) => (
-              <Menu.Item key={item} onSelect={() => handleSelect2(item)}>
+              <Menu.Item key={item} onSelect={() => handleHostSelect(item)}>
                 {item}
               </Menu.Item>
             ))}
@@ -273,6 +282,7 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
                   {selectedClassifications[dataItem.id] !== undefined ? (
                     <Button
                       style={{
+                        width: "8rem",
                         backgroundColor: {
                           'Top Secret': 'orange',
                           'Top Secret/SCI': 'yellow',
@@ -285,23 +295,23 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
                     </Button>
                   ) : (
                     <Dropdown
-                        toggle={toggleClassification(dataItem.id)}
-                        onSelect={(option) => handleClassificationChange(dataItem.id, option)}>
-                        <Menu style={{ width: 120 }}>
-                            {classificationOptions.map((option) => (
-                                <Menu.Item key={option.id} style={{
-                                    backgroundColor: {
-                                      'Top Secret': 'orange',
-                                      'Top Secret/SCI': 'yellow',
-                                      'Secret': 'red',
-                                      'Confidential': 'blue',
-                                      'Unclassified': 'green',
-                                    }[option.classification_name] || '',
-                                }}>
-                                    {option.classification_name}
-                                </Menu.Item>
-                            ))}
-                        </Menu>
+                      toggle={toggleClassification(dataItem.id)}
+                      onSelect={(option) => handleClassificationChange(dataItem.id, option)}>
+                      <Menu style={{ width: 120 }}>
+                        {classificationOptions.map((option) => (
+                          <Menu.Item key={option.id} style={{
+                            backgroundColor: {
+                              'Top Secret': 'orange',
+                              'Top Secret/SCI': 'yellow',
+                              'Secret': 'red',
+                              'Confidential': 'blue',
+                              'Unclassified': 'green',
+                            }[option.classification_name] || '',
+                          }}>
+                            {option.classification_name}
+                          </Menu.Item>
+                        ))}
+                      </Menu>
                     </Dropdown>
                   )}
                 </Table.Cell>
@@ -314,15 +324,13 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
           onChange={handlePageChange}
           current={currentPage}
           alwaysShowLastPageLink
-          totalPages={Math.ceil(filteredData.length / recordsPerPage)} // Change to filteredData.length
+          totalPages={Math.ceil(filteredData.length / recordsPerPage)}
         />
       </div>
     </StyledContainer>
   );
 };
 
-// Define prop types for the component
 KOsComponent.propTypes = propTypes;
 
-// Export the component
 export default KOsComponent;
