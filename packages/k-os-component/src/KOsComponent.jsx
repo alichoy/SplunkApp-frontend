@@ -81,54 +81,9 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
     setFilteredData(filteredData);
   }, [categorySelected, searchValue, data]);
 
-  //__________________ PUT ___________________________
-  // Handle change in selected labels using Multiselect 
-  const handleLabelsChange = (id, values) => {
-    setSelectedLabels({
-      ...selectedLabels,
-      [id]: values
-    });
-
-    // Prepare the data to be sent in the PUT request
-    const updatedData = {
-      ...data.find(item => item.id === id),
-      meta_label_id: values.map(value => value.id) // Assuming the selected values have an 'id' property
-    };
-
-    // Determine the endpoint based on the category of the item
-    let endpoint;
-    switch (updatedData.category_id) {
-      case 1:
-        endpoint = `https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/apps/${id}`;
-        break;
-      case 2:
-        endpoint = `https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/reports/${id}`;
-        break;
-      case 3:
-        endpoint = `https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/dashboard/${id}`;
-        break;
-      case 4:
-        endpoint = `https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/alert/${id}`;
-        break;
-      default:
-        console.error('Invalid category ID:', updatedData.category_id);
-        return;
-    }
-
-    // Send the PUT request to update the record with the meta label
-    axios.put(endpoint, updatedData)
-      .then(response => {
-        console.log('Record updated successfully:', response.data);
-        // You can update the state or perform any other necessary actions upon successful update
-      })
-      .catch(error => {
-        console.error('Error updating record:', error);
-      });
-  };
-  //__________________ PUT ___________________________
-
   //toggle functions for Dropdowns and Buttons
   const toggleClassification = (id) => {
+    console.log("toggleClassification being called")
     const classificationId = data.find((dataItem) => dataItem.id === id)?.classification_id;
     if (classificationId !== null && classificationOptions.length > 0) {
       const classification = classificationOptions.find((option) => option.id === classificationId);
@@ -149,14 +104,6 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
     }
   };
 
-  // Handle change in selected classification using Dropdown
-  const handleClassificationChange = (id, option) => {
-    setSelectedClassifications((prevSelectedClassifications) => ({
-      ...prevSelectedClassifications,
-      [id]: option.label,
-    }));
-  };
-
   // Define functions to handle Dropdown selections
   const handleCategoryDropdown = (categoryId) => {
     const selectedCategory = categories.find(item => item.id === categoryId);
@@ -171,7 +118,7 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
     setselectedHost(option);
   };
 
-  // Effect hook to set initial classifications based on data
+  // Effect hook to set initial classifications and options based on data
   useEffect(() => {
     const initialClassifications = data.reduce((acc, dataItem) => {
       if (dataItem.classification) {
@@ -180,17 +127,19 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
       return acc;
     }, {});
     setSelectedClassifications(initialClassifications);
-  }, [data]);
-
-  const categoryToggle = (
-    <Button isMenu style={{ width: "12rem", marginRight: "1.5rem" }}>
-      {categorySelected ? categories.find(item => item.id === categorySelected)?.category_name : 'All Categories'}
-    </Button>
-  );
+    setClassificationOptions(classificationOptions); // Use classificationOptions here
+  }, [data, classificationOptions]); // Update dependencies
 
   const hostToggle = (
     <Button isMenu style={{ width: "12rem" }}>
       {selectedHost}
+    </Button>
+  );
+
+  // Toggle button for category dropdown
+  const categoryToggle = (
+    <Button isMenu style={{ width: "12rem", marginRight: "1.5rem" }}>
+      {categorySelected ? categories.find(item => item.id === categorySelected)?.category_name : 'All Categories'}
     </Button>
   );
 
@@ -215,6 +164,121 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
 
   // Get the current records based on pagination and filtered data
   const currentRecords = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
+
+  //_________________ PUT REQUEST _______________________
+  
+  // Function to handle PUT request to update disabled column to 1
+  const handleDisableRecord = (id) => {
+    console.log("handleDisableRecord being called")
+    // Prepare the data to be sent in the PUT request
+    const updatedData = {
+      ...data.find(item => item.id === id),
+      disabled: 1 // Set disabled column to 1
+    };
+
+    // Call function to handle PUT request
+    handlePutRequest(id, updatedData);
+
+    // Update the data state to remove the disabled record
+    setData(prevData => prevData.filter(item => item.id !== id));
+
+    // Update the filteredData state to remove the disabled record if it's currently displayed
+    setFilteredData(prevFilteredData => prevFilteredData.filter(item => item.id !== id));
+  };
+
+  // Function to handle change in selected labels using Multiselect
+  const handleLabelsChange = (id, label) => {
+    console.log("handleLabelsChange is being called, id is: ", id, selectedLabels)
+
+    // Update the selected labels in the state
+    setSelectedLabels((prevSelectedLabels) => ({
+      ...prevSelectedLabels,
+      [id]: label,
+    }));
+
+    // Prepare the updated data with the new label IDs
+    const updatedData = {
+      ...data.find(item => item.id === id),
+      meta_label_id: label.id // Assuming the meta_label_id accepts a comma-separated string of label IDs
+    };
+
+    // Call function to handle PUT request
+    handlePutRequest(id, updatedData);
+
+    // Update the data state with the updated record
+    setData(prevData => prevData.map(item => item.id === id ? updatedData : item));
+
+    // Update the filteredData state if the record is currently displayed
+    setFilteredData(prevFilteredData => prevFilteredData.map(item => item.id === id ? updatedData : item));
+  };
+
+  // Function to handle change in selected classification using Dropdown
+  const handleClassificationChange = (id, option) => {
+    console.log("handleClassificationChange is being called, id is: ", id, option)
+    console.log("classificationOptions", classificationOptions)
+    
+    setSelectedClassifications((prevSelectedClassifications) => ({
+      ...prevSelectedClassifications,
+      [id]: option.classification_name, 
+    }));
+
+    // Prepare the updated data with the new classification ID
+    const updatedData = {
+      ...data.find(item => item.id === id),
+      classification_id: option.id // Corrected to use option.classification_id
+    };
+
+    // Call function to handle PUT request
+    handlePutRequest(id, updatedData);
+
+    // Update the data state with the updated record
+    setData(prevData => prevData.map(item => item.id === id ? updatedData : item));
+
+    // Update the filteredData state if the record is currently displayed
+    setFilteredData(prevFilteredData => prevFilteredData.map(item => item.id === id ? updatedData : item));
+  }
+
+  // Function to handle PUT request based on category
+  const handlePutRequest = (id, updatedData) => {
+    let endpoint;
+
+    // Determine the endpoint based on the category
+    switch (updatedData.category_id) {
+      case 1:
+        endpoint = `https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/apps/${id}`;
+        break;
+      case 2:
+        endpoint = `https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/reports/${id}`;
+        break;
+      case 3:
+        endpoint = `https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/dashboards/${id}`;
+        break;
+      case 4:
+        endpoint = `https://s4jdklwk0k.execute-api.us-east-1.amazonaws.com/alert/${id}`;
+        break;
+      default:
+        console.error('Invalid category ID:', updatedData.category_id);
+        return;
+    }
+
+    // Send the PUT request to update the record with the classification
+    axios.put(endpoint, updatedData)
+      .then(response => {
+        console.log('Record updated successfully:', response.data);
+        // You can update the state or perform any other necessary actions upon successful update
+      })
+      .catch(error => {
+        console.error('Error updating record:', error);
+      });
+  };
+
+  // Function to handle click on Trash button
+  const handleTrashClick = (id) => {
+    // Call function to handle PUT request to disable record
+    console.log("handleTrashClick being called")
+    handleDisableRecord(id);
+  }; 
+  //_________________ PUT REQUEST _______________________
 
   return (
     <StyledContainer>
@@ -295,11 +359,13 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
                     </Button>
                   ) : (
                     <Dropdown
-                      toggle={toggleClassification(dataItem.id)}
-                      onSelect={(option) => handleClassificationChange(dataItem.id, option)}>
+                      toggle={toggleClassification(dataItem.id)}>
                       <Menu style={{ width: 120 }}>
                         {classificationOptions.map((option) => (
-                          <Menu.Item key={option.id} style={{
+                          <Menu.Item 
+                          key={option.id} 
+                          onClick={() => handleClassificationChange(dataItem.id, option)}
+                          style={{
                             backgroundColor: {
                               'Top Secret': 'orange',
                               'Top Secret/SCI': 'yellow',
@@ -315,7 +381,7 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
                     </Dropdown>
                   )}
                 </Table.Cell>
-                <Table.Cell align='center'><Button style={{ color: 'red' }}><Trash /></Button></Table.Cell>
+                <Table.Cell align='center'><Button style={{ color: 'red' }} onClick={() => handleTrashClick(dataItem.id)}><Trash /></Button></Table.Cell>
               </Table.Row>
             ))}
           </Table.Body>
@@ -329,7 +395,7 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
       </div>
     </StyledContainer>
   );
-};
+}
 
 KOsComponent.propTypes = propTypes;
 
