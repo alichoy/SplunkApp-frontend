@@ -83,19 +83,19 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
 
   //toggle functions for Dropdowns and Buttons
   const toggleClassification = (id) => {
-    console.log("toggleClassification being called")
     const classificationId = data.find((dataItem) => dataItem.id === id)?.classification_id;
     if (classificationId !== null && classificationOptions.length > 0) {
       const classification = classificationOptions.find((option) => option.id === classificationId);
       return <Button 
         style={{ 
         width: "8rem",
+        color: "black",
         backgroundColor: {
-        'Top Secret': 'orange',
-        'Top Secret/SCI': 'yellow',
+        'Top Secret': '#FF9800',
+        'Top Secret/SCI': '#FFEB3B',
         'Secret': 'red',
-        'Confidential': 'blue',
-        'Unclassified': 'green',
+        'Confidential': '#03a9f4',
+        'Unclassified': '#8BC34A',
       }[classification.classification_name] }}>{classification.classification_name}</Button>;
     } else {
       return <Button isMenu style={{ width: "8rem" }}>{selectedClassifications[id] !== undefined
@@ -111,9 +111,9 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
   };
 
   useEffect(() => {
-    console.log('Selected category in use effect:', categorySelected?.category_name);
   }, [categorySelected]);
 
+  // Function to handle host dropdown selection
   const handleHostSelect = (option) => {
     setselectedHost(option);
   };
@@ -130,6 +130,7 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
     setClassificationOptions(classificationOptions); // Use classificationOptions here
   }, [data, classificationOptions]); // Update dependencies
 
+  // Toggle button for host dropdown
   const hostToggle = (
     <Button isMenu style={{ width: "12rem" }}>
       {selectedHost}
@@ -169,7 +170,6 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
   
   // Function to handle PUT request to update disabled column to 1
   const handleDisableRecord = (id) => {
-    console.log("handleDisableRecord being called")
     // Prepare the data to be sent in the PUT request
     const updatedData = {
       ...data.find(item => item.id === id),
@@ -187,55 +187,73 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
   };
 
   // Function to handle change in selected labels using Multiselect
-  const handleLabelsChange = (id, label) => {
-    console.log("handleLabelsChange is being called, id is: ", id, selectedLabels)
-
-    // Update the selected labels in the state
-    setSelectedLabels((prevSelectedLabels) => ({
-      ...prevSelectedLabels,
-      [id]: label,
-    }));
-
+  const handleLabelsChange = (id, labels) => {    
+    // Extract the IDs of the selected labels
+    const labelIds = labels.map(label => label.id);
+  
     // Prepare the updated data with the new label IDs
     const updatedData = {
       ...data.find(item => item.id === id),
-      meta_label_id: label.id // Assuming the meta_label_id accepts a comma-separated string of label IDs
+      meta_label_id: labelIds.length > 0 ? labelIds[0] : null // Assuming the meta_label_id holds only one ID
     };
-
+  
     // Call function to handle PUT request
     handlePutRequest(id, updatedData);
-
+  
+    // Update the selected labels in the state
+    setSelectedLabels(prevSelectedLabels => ({
+      ...prevSelectedLabels,
+      [id]: labels
+    }));
+  
     // Update the data state with the updated record
     setData(prevData => prevData.map(item => item.id === id ? updatedData : item));
-
+  
     // Update the filteredData state if the record is currently displayed
     setFilteredData(prevFilteredData => prevFilteredData.map(item => item.id === id ? updatedData : item));
   };
+  
 
   // Function to handle change in selected classification using Dropdown
   const handleClassificationChange = (id, option) => {
-    console.log("handleClassificationChange is being called, id is: ", id, option)
-    console.log("classificationOptions", classificationOptions)
-    
-    setSelectedClassifications((prevSelectedClassifications) => ({
-      ...prevSelectedClassifications,
-      [id]: option.classification_name, 
-    }));
 
-    // Prepare the updated data with the new classification ID
-    const updatedData = {
-      ...data.find(item => item.id === id),
-      classification_id: option.id // Corrected to use option.classification_id
-    };
+    // Check if "None" option is selected
+    if (option === "None") {
+        // Update the classification to null
+        const updatedData = {
+            ...data.find(item => item.id === id),
+            classification_id: null
+        };
+        
+        // Call function to handle PUT request
+        handlePutRequest(id, updatedData);
+        
+        // Update the data state with the updated record
+        setData(prevData => prevData.map(item => item.id === id ? updatedData : item));
+        
+        // Update the filteredData state if the record is currently displayed
+        setFilteredData(prevFilteredData => prevFilteredData.map(item => item.id === id ? updatedData : item));
+    } else {
+        setSelectedClassifications((prevSelectedClassifications) => ({
+            ...prevSelectedClassifications,
+            [id]: option.classification_name, 
+        }));
 
-    // Call function to handle PUT request
-    handlePutRequest(id, updatedData);
+        // Prepare the updated data with the new classification ID
+        const updatedData = {
+            ...data.find(item => item.id === id),
+            classification_id: option.id
+        };
 
-    // Update the data state with the updated record
-    setData(prevData => prevData.map(item => item.id === id ? updatedData : item));
+        // Call function to handle PUT request
+        handlePutRequest(id, updatedData);
 
-    // Update the filteredData state if the record is currently displayed
-    setFilteredData(prevFilteredData => prevFilteredData.map(item => item.id === id ? updatedData : item));
+        // Update the data state with the updated record
+        setData(prevData => prevData.map(item => item.id === id ? updatedData : item));
+
+        // Update the filteredData state if the record is currently displayed
+        setFilteredData(prevFilteredData => prevFilteredData.map(item => item.id === id ? updatedData : item));
+    }
   }
 
   // Function to handle PUT request based on category
@@ -264,7 +282,6 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
     // Send the PUT request to update the record with the classification
     axios.put(endpoint, updatedData)
       .then(response => {
-        console.log('Record updated successfully:', response.data);
         // You can update the state or perform any other necessary actions upon successful update
       })
       .catch(error => {
@@ -275,7 +292,6 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
   // Function to handle click on Trash button
   const handleTrashClick = (id) => {
     // Call function to handle PUT request to disable record
-    console.log("handleTrashClick being called")
     handleDisableRecord(id);
   }; 
   //_________________ PUT REQUEST _______________________
@@ -317,6 +333,7 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
         <Table stripeRows>
           <Table.Head>
             {/* Table headers */}
+            <Table.HeadCell>Type</Table.HeadCell>
             <Table.HeadCell>Name</Table.HeadCell>
             <Table.HeadCell>Description</Table.HeadCell>
             <Table.HeadCell>Owner</Table.HeadCell>
@@ -329,55 +346,65 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
             {currentRecords.map((dataItem) => (
               <Table.Row key={dataItem.id}>
                 {/* Table cells with data */}
+                <Table.Cell style={{ color: '#8d7d7dad' }}>
+                  {categories.find(category => category.id === dataItem.category_id)?.category_name}
+                </Table.Cell>
                 <Table.Cell>{dataItem.title}</Table.Cell>
                 <Table.Cell>{dataItem.description}</Table.Cell>
                 <Table.Cell>{dataItem.owner}</Table.Cell>
                 <Table.Cell style={{ width: "10rem" }}>
                   {/* Multiselect for meta labels */}
-                  <Multiselect values={selectedLabels[dataItem.id] || []} onChange={(e, { values }) => handleLabelsChange(dataItem.id, values)} inline>
+                  <Multiselect 
+                    values={selectedLabels[dataItem.id] || []} 
+                    onChange={(e, { values }) => handleLabelsChange(dataItem.id, values)} 
+                    inline
+                  >
                     {/* Map over meta labels and render Multiselect.Option */}
                     {metaLabels.map(label => (
-                      <Multiselect.Option key={label.id} label={label.label} value={label.label} />
+                      <Multiselect.Option 
+                        key={label.id} 
+                        label={label.label} 
+                        value={label} // Set value to the label object itself
+                        selected={(selectedLabels[dataItem.id] || []).some(selectedLabel => selectedLabel.id === label.id)} // Check if label is selected for the record
+                      />
                     ))}
                   </Multiselect>
                 </Table.Cell>
                 <Table.Cell align='center'>
                   {/* Dropdown or Button for classification with conditional styling */}
                   {selectedClassifications[dataItem.id] !== undefined ? (
-                    <Button
-                      style={{
-                        width: "8rem",
-                        backgroundColor: {
-                          'Top Secret': 'orange',
-                          'Top Secret/SCI': 'yellow',
-                          'Secret': 'red',
-                          'Confidential': 'blue',
-                          'Unclassified': 'green',
-                        }[selectedClassifications[dataItem.id]] || ''
-                      }}>
-                      {selectedClassifications[dataItem.id]}
+                    <Button>
+                        {selectedClassifications[dataItem.id]}
                     </Button>
                   ) : (
                     <Dropdown
-                      toggle={toggleClassification(dataItem.id)}>
-                      <Menu style={{ width: 120 }}>
-                        {classificationOptions.map((option) => (
-                          <Menu.Item 
-                          key={option.id} 
-                          onClick={() => handleClassificationChange(dataItem.id, option)}
-                          style={{
-                            backgroundColor: {
-                              'Top Secret': 'orange',
-                              'Top Secret/SCI': 'yellow',
-                              'Secret': 'red',
-                              'Confidential': 'blue',
-                              'Unclassified': 'green',
-                            }[option.classification_name] || '',
-                          }}>
-                            {option.classification_name}
-                          </Menu.Item>
-                        ))}
-                      </Menu>
+                        toggle={toggleClassification(dataItem.id)}>
+                        <Menu style={{ width: 120 }}>
+                            {/* Add "None" option */}
+                            <Menu.Item 
+                                key="none" 
+                                onClick={() => handleClassificationChange(dataItem.id, "None")}>
+                                None
+                            </Menu.Item>
+                            {/* Render other classification options */}
+                            {classificationOptions.map((option) => (
+                                <Menu.Item 
+                                    key={option.id} 
+                                    onClick={() => handleClassificationChange(dataItem.id, option)}
+                                    style={{
+                                        color: "black",
+                                        backgroundColor: {
+                                            'Top Secret': '#FF9800',
+                                            'Top Secret/SCI': '#FFEB3B',
+                                            'Secret': 'red',
+                                            'Confidential': '#03a9f4',
+                                            'Unclassified': '#8BC34A',
+                                        }[option.classification_name] || '',
+                                    }}>
+                                    {option.classification_name}
+                                </Menu.Item>
+                            ))}
+                        </Menu>
                     </Dropdown>
                   )}
                 </Table.Cell>
