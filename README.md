@@ -3,7 +3,7 @@
 ## Overview
 The Splunk App provides Splunk users with an overview of their Splunk Instances/Hosts, allowing them to see details such as the number of Apps, Dashboards, Sources, etc. Users can filter data by various categories like Apps, Dashboards, Sources, Sourcetypes, Hosts, Indexes, etc. Additionally, the app features a search functionality enabling users to search by name. The data from Splunk hosts is stored in a database and then fetched by the app. Users can also classify data by adding labels such as "secret" or "top secret" and add custom labels like "important". Furthermore, the app allows users to delete records, removing them from the app's display.
 
-### Installation
+## Installation
 Before installing the Splunk App, ensure that you have the following prerequisites:
 
 - Splunk installed
