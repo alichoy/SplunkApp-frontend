@@ -92,7 +92,7 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
         color: "black",
         backgroundColor: {
         'Top Secret': '#FF9800',
-        'Top Secret/SCI': '#FFEB3B',
+        'Admin Only': '#FFEB3B',
         'Secret': 'red',
         'Confidential': '#03a9f4',
         'Unclassified': '#8BC34A',
@@ -333,7 +333,7 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
         <Table stripeRows>
           <Table.Head>
             {/* Table headers */}
-            <Table.HeadCell>Type</Table.HeadCell>
+            <Table.HeadCell></Table.HeadCell>
             <Table.HeadCell>Name</Table.HeadCell>
             <Table.HeadCell>Description</Table.HeadCell>
             <Table.HeadCell>Owner</Table.HeadCell>
@@ -395,7 +395,7 @@ const KOsComponent = ({ name = 'User', searchValue }) => {
                                         color: "black",
                                         backgroundColor: {
                                             'Top Secret': '#FF9800',
-                                            'Top Secret/SCI': '#FFEB3B',
+                                            'Admin Only': '#FFEB3B',
                                             'Secret': 'red',
                                             'Confidential': '#03a9f4',
                                             'Unclassified': '#8BC34A',
